@@ -25,28 +25,41 @@ docker compose exec db mysql -u porepore -p porepore_development
 docker compose down
 ```
 
-RailsのDB設定は現在SQLiteです。RailsからMySQLを利用するには、別途
-`mysql2` gemの追加と `config/database.yml` の変更が必要です。
+## Railsの起動
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Docker上でRailsとMySQLをまとめて起動できます。Mac側へのRubyやMySQLクライアントのインストールは不要です。
 
-Things you may want to cover:
+```sh
+docker compose up --build -d web
+docker compose logs -f web
+```
 
-* Ruby version
+`http://localhost:3000` でアクセスできます。
 
-* System dependencies
+```sh
+docker compose exec web bin/rails console
+docker compose exec web bin/rails test
+docker compose down
+```
 
-* Configuration
+### ホスト上でRailsを起動する場合
 
-* Database creation
+RailsもMySQLを使用します。macOSでは、mysql2 gemのビルド用クライアントを用意します。
 
-* Database initialization
+```sh
+brew install mysql-client@8.4
+bundle config set --local build.mysql2 "--with-mysql-config=$(brew --prefix mysql-client@8.4)/bin/mysql_config"
+bundle install
+docker compose up -d db
+bin/rails db:prepare
+bin/rails server
+```
 
-* How to run the test suite
+開発用DBとは別に、初回起動時に `porepore_test` を作成し、アプリ用ユーザーに
+テストDBの権限を付与します。既存ボリュームを使う場合は、次のコマンドを一度実行してください。
 
-* Services (job queues, cache servers, search engines, etc.)
+```sh
+docker compose exec db bash /docker-entrypoint-initdb.d/init-test-db.sh
+bin/rails test
+```
 
-* Deployment instructions
-
-* ...
