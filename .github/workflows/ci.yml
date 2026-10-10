@@ -13,6 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Install MySQL client headers
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y default-libmysqlclient-dev
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -31,6 +34,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Install MySQL client headers
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y default-libmysqlclient-dev
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -53,6 +59,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.4.11
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_ROOT_HOST: "%"
+          MYSQL_DATABASE: porepore_test
+        ports:
+          - 3306:3306
+        options: --health-cmd "mysqladmin ping -h 127.0.0.1" --health-interval 10s --health-timeout 5s --health-retries 10
+
     # services:
     #  redis:
     #    image: valkey/valkey:8
@@ -61,7 +78,7 @@ jobs:
     #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips default-libmysqlclient-dev
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -74,6 +91,8 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root_password
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
